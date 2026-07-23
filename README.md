@@ -115,6 +115,10 @@ medical-rag-bench/
 └── acl-template/          # Official ACL style files
 ```
 
+## DOI
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21509728.svg)](https://doi.org/10.5281/zenodo.21509728)
+
 ## Paper
 
 Full paper with methods, 2x2 crossover analysis, and adaptive RRF: [paper.md](paper.md) | [paper.tex](paper.tex)

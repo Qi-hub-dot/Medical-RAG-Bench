@@ -177,7 +177,7 @@ For future work, we recommend using **document-level relevance labels** (each qu
 
 This paper presents the first controlled 2×2 crossover experiment isolating language mismatch from domain specialization in non-English RAG retrieval. Our key finding is that **the language of the embedding model—not the retrieval algorithm, not the domain—is the single largest controllable factor in RAG retrieval quality**, accounting for a 13-20 percentage point penalty when mismatched. With a language-appropriate embedding model, hybrid retrieval achieves P@3=75.65%, outperforming BM25 alone by 22 percentage points.
 
-We release Medical-RAG-Bench as a resource for continued research, and encourage the RAG community to treat embedding model language as a first-class design consideration, not an afterthought.
+We release Medical-RAG-Bench as a resource for continued research (DOI: 10.5281/zenodo.21509728), and encourage the RAG community to treat embedding model language as a first-class design consideration, not an afterthought.
 
 ## References
 
