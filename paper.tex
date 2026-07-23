@@ -1,5 +1,5 @@
-\documentclass[11pt]{article}
-\usepackage[review]{acl}
+﻿\documentclass[11pt]{article}
+\usepackage[preprint]{acl}
 \usepackage{times}
 \usepackage{latexsym}
 \usepackage[T1]{fontenc}
@@ -106,18 +106,18 @@ Chinese Embedding (BGE) & \textbf{46.7\%} & 33.3\% \\
 
 This result definitively rules out the ``domain specialization'' hypothesis. If the problem were domain (medical vs.\ general), the English model would perform poorly on English medical text---but it achieves its best score there (53.3\%). The degradation only occurs when the language changes.
 
-\begin{figure*}[t]
+\begin{figure}[t]
 \centering
-\includegraphics[width=0.65\textwidth]{crossover_heatmap.pdf}
+\includegraphics[width=0.7\textwidth]{crossover_heatmap.pdf}
 \caption{Heatmap visualization of the $2\times2$ crossover experiment. Language mismatch causes a 13--20pp penalty; domain specialization is ruled out as the cause.}
 \label{fig:crossover}
-\end{figure*}
+\end{figure}
 
 \subsection{Main Results (Full Dataset, $n=108$ QA Pairs)}
 
 \textbf{General-domain Embedding (all-MiniLM-L6-v2, English-trained):}
 
-\begin{table*}[t]
+\begin{table}[t]
 \centering
 \small
 \begin{tabular}{lccc}
@@ -131,13 +131,13 @@ Hybrid (RRF) & 33.04\% & 25.39\% & 0.6714 \\
 \end{tabular}
 \caption{Results with English-trained embedding (all-MiniLM-L6-v2). BM25 dominates the general-domain embedding scenario.}
 \label{tab:results-en}
-\end{table*}
+\end{table}
 
 With a general-domain English embedding model, BM25 dominates---semantic search fails to return any relevant result in the top 3 for 61 out of 115 queries (53\%). Hybrid retrieval is dragged down by noisy semantic results.
 
 \textbf{Chinese-domain Embedding (bge-small-zh-v1.5, Chinese-trained):}
 
-\begin{table*}[t]
+\begin{table}[t]
 \centering
 \small
 \begin{tabular}{lccc}
@@ -151,7 +151,7 @@ Semantic & 48.41\% & 34.26\% & 0.9580 \\
 \end{tabular}
 \caption{Results with Chinese-trained embedding (bge-small-zh-v1.5). Hybrid retrieval is the clear winner when embedding language matches.}
 \label{tab:results-zh}
-\end{table*}
+\end{table}
 
 With a Chinese-specific embedding model, the picture reverses completely: semantic search becomes competitive with BM25 (48.41\% vs.\ 51.59\%, gap reduced from 33pp to 3pp), and hybrid retrieval emerges as the clear winner at 75.65\% P@3---outperforming BM25 alone by 24 percentage points ($p < 0.001$).
 
