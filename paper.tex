@@ -4,6 +4,8 @@
 \usepackage{latexsym}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
+% CJK support for Chinese characters in pdflatex
+\usepackage{CJKutf8}
 \usepackage{microtype}
 \usepackage{inconsolata}
 \usepackage{graphicx}
@@ -196,9 +198,9 @@ The improvement from switching to a Chinese embedding model is statistically sig
 
 \subsection{The Embedding Language Gap}
 
-Our results strongly indicate that the primary failure mode of semantic search in Chinese medical RAG is language mismatch, not domain mismatch. all-MiniLM-L6-v2~\cite{reimers2019allminilm} was trained on English web corpora (MS MARCO, Natural Questions, etc.). While it supports multilingual tokenization, its semantic space is anchored in English. Chinese medical terms like ``心肌梗死'' have no meaningful vector representation in this space---the model effectively treats them as out-of-vocabulary tokens.
+Our results strongly indicate that the primary failure mode of semantic search in Chinese medical RAG is language mismatch, not domain mismatch. all-MiniLM-L6-v2~\cite{reimers2019allminilm} was trained on English web corpora (MS MARCO, Natural Questions, etc.). While it supports multilingual tokenization, its semantic space is anchored in English. Chinese medical terms like \begin{CJK}{UTF8}{gbsn}心肌梗死\end{CJK} have no meaningful vector representation in this space---the model effectively treats them as out-of-vocabulary tokens.
 
-By contrast, bge-small-zh-v1.5~\cite{xiao2023bge} was trained on Chinese text (including Wudao, a 200GB Chinese corpus), and maps ``心肌梗死'' and its contextually related terms into a coherent semantic neighborhood. The 29.86pp improvement from switching embedding models is the single largest factor affecting retrieval quality in our experiments.
+By contrast, bge-small-zh-v1.5~\cite{xiao2023bge} was trained on Chinese text (including Wudao, a 200GB Chinese corpus), and maps \begin{CJK}{UTF8}{gbsn}心肌梗死\end{CJK} and its contextually related terms into a coherent semantic neighborhood. The 29.86pp improvement from switching embedding models is the single largest factor affecting retrieval quality in our experiments.
 
 \subsection{Failure Case Analysis}
 
@@ -270,7 +272,7 @@ Our findings suggest domain-adaptive retrieval strategies:
 
 \section{Evaluation Validity}
 
-We identified a methodological nuance in our relevance judgment approach. Keyword-based matching (e.g., counting ``再灌注'' as a hit) can produce cross-topic false positives: for the query ``急性心肌梗死的首选再灌注策略'', the ischemic stroke document also mentions ``再灌注'' (in the context of thrombolysis, not PCI), and is counted as a P@5 hit despite being topically incorrect.
+We identified a methodological nuance in our relevance judgment approach. Keyword-based matching (e.g., counting \begin{CJK}{UTF8}{gbsn}再灌注\end{CJK} as a hit) can produce cross-topic false positives: for the query \begin{CJK}{UTF8}{gbsn}急性心肌梗死的首选再灌注策略\end{CJK}, the ischemic stroke document also mentions \begin{CJK}{UTF8}{gbsn}再灌注\end{CJK} (in the context of thrombolysis, not PCI), and is counted as a P@5 hit despite being topically incorrect.
 
 This inflates P@5 scores across all methods. However, it does not affect MRR, which measures the rank of the first relevant result---and the first result was consistently the correct document for BM25. The inflated P@5 primarily narrows the apparent gap between BM25 and semantic, meaning the true performance gap is likely larger than our reported numbers suggest.
 
