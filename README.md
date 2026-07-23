@@ -1,70 +1,85 @@
 # Medical-RAG-Bench
 
 <p align="center">
-  <strong>BM25 vs. Semantic Search on Chinese Medical Literature</strong><br>
-  <sub>A systematic evaluation benchmark — with a surprising result</sub>
+  <strong>The Embedding Language Gap in Non-English RAG Retrieval</strong><br>
+  <sub>A controlled 2×2 crossover experiment isolating language mismatch from domain specialization</sub>
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/task-RAG_retrieval-blue" alt="RAG">
-  <img src="https://img.shields.io/badge/domain-Chinese_medical-red" alt="Medical">
-  <img src="https://img.shields.io/badge/method-BM25_|_FAISS_|_RRF-purple" alt="Methods">
-  <img src="https://img.shields.io/badge/queries-15-green" alt="Queries">
+  <img src="https://img.shields.io/badge/papers-46_docs-blue" alt="Docs">
+  <img src="https://img.shields.io/badge/queries-108-orange" alt="Queries">
+  <img src="https://img.shields.io/badge/statistical-Wilcoxon_p<0.001-brightgreen" alt="Stats">
+  <img src="https://img.shields.io/badge/embedding-BGE--small--zh-red" alt="BGE">
+  <img src="https://img.shields.io/badge/hybrid-P@3=75.65%25-purple" alt="Hybrid">
   <img src="https://img.shields.io/badge/license-CC_BY_4.0-lightgrey" alt="License">
 </p>
 
 ---
 
-## The Finding
+## Key Finding
 
-**BM25 alone (P@3=42.2%, MRR=1.000) significantly outperforms semantic search (P@3=22.2%, MRR=0.622)** on Chinese medical literature retrieval. General-domain embedding models fail on technical medical Chinese — and hybrid RRF fusion makes things worse, not better.
+**The language of the embedding model — not the retrieval algorithm, not the domain — is the single largest controllable factor in non-English RAG quality.**
 
-> This challenges the default assumption in RAG system design that "hybrid retrieval is always better."
+A 2x2 crossover experiment (Chinese vs. English text x Chinese vs. English embedding) shows that language mismatch alone causes a **13-20 percentage point penalty** in retrieval precision, controlling for domain content. Switch the embedding model to match the document language, and hybrid RAG goes from losing to BM25 to **outperforming it by 22 percentage points** (P@3=75.65%).
 
 ---
 
 ## Results
 
+### Main Experiment (n=108 QA pairs, 46 documents)
+
+**With English embedding (all-MiniLM-L6-v2) — the standard default:**
+
 | Method | P@3 | P@5 | MRR |
 |--------|-----:|-----:|-----:|
-| **BM25** | **42.2%** | **26.7%** | **1.000** |
-| Semantic (all-MiniLM-L6-v2) | 22.2% | 20.0% | 0.622 |
-| Hybrid (BM25 + Semantic + RRF) | 37.8% | 25.3% | 0.856 |
+| BM25 | 51.6% | 38.4% | 0.978 |
+| Semantic | 18.6% | 16.9% | 0.393 |
+| Hybrid (RRF) | 33.0% | 25.4% | 0.671 |
 
-- BM25 achieves perfect MRR (1.000) — the first result is always relevant
-- Semantic search trails BM25 by **20 percentage points** in P@3
-- RRF fusion of noisy semantic results **dilutes** BM25's strong signal
+**With Chinese embedding (bge-small-zh-v1.5) — language-matched:**
 
-### Ablation: Chunk Size
+| Method | P@3 | P@5 | MRR |
+|--------|-----:|-----:|-----:|
+| BM25 | 51.6% | 38.4% | 0.978 |
+| Semantic | 48.4% | 34.3% | 0.958 |
+| **Hybrid (RRF)** | **75.7%** | **56.4%** | **0.977** |
 
-| Chunk Size | P@5 |
-|:----------:|:---:|
-| 256 | 20.0% |
-| 512 | 20.0% |
-| 1024 | 20.0% |
+- Switching embedding models: semantic P@3 jumps **+29.86pp** (p < 0.001, Wilcoxon)
+- Hybrid with Chinese embedding: **22pp above BM25 alone**
+- 53% of semantic queries returned zero relevant results with the English model — only 7% with Chinese
 
-At this document scale (1-2K chars per doc), chunk size has no measurable impact.
+### The Crossover Experiment
 
----
+A 2x2 controlled experiment with parallel Chinese-English medical documents (identical content, different language):
 
-## Why BM25 Wins in Medicine
+| Embedding \\ Text | Chinese Medical | English Medical |
+|---|---|---|
+| English (all-MiniLM) | 33.3% | **53.3%** |
+| Chinese (BGE) | **46.7%** | 33.3% |
 
-### 1. Medical terminology has near-zero paraphrasing
-"心肌梗死" is never colloquially called "心脏病发作" in clinical literature. General-domain embeddings are optimized for paraphrasing everyday language — a capability that provides zero advantage when the target domain has no paraphrases.
+If the problem were domain (medical terminology), the English model would perform poorly on English medical text — but it achieves its **best** score there (53.3%). The degradation only occurs when the language changes. **Language mismatch, not domain specialization, is the root cause.**
 
-### 2. Embedding model domain gap
-all-MiniLM-L6-v2 was trained on English web data. Its Chinese tokenization and semantic representations are suboptimal for technical medical text. A domain-specific model (e.g., Chinese medical BERT) could close this gap.
+Replicated in the legal domain with the same crossover pattern.
 
-### 3. RRF dilution effect
-When semantic results are noisy (relevant docs at rank 3-5 while BM25 finds them at rank 1-2), RRF averaging pulls scores down. Fusion helps only when both retrievers are individually competent.
+### Adaptive RRF Weighting
+
+A proposed method to auto-calibrate fusion weights based on per-retriever MRR:
+
+| Embedding Model | BM25 Weight | Semantic Weight | Best P@3 |
+|-----------------|:-----------:|:---------------:|:--------:|
+| English (weak) | 0.72 | 0.28 | 55.2% |
+| Chinese (strong) | 0.52 | 0.48 | **75.9%** |
+
+Adaptive weighting correctly downweights weak embeddings but doesn't beat equal-weight RRF when both retrievers are strong. Its primary value is as a **safeguard against catastrophic embedding failure**.
 
 ---
 
 ## Dataset
 
-- **11 Chinese medical literature excerpts** spanning 10 specialties (cardiology, neurology, oncology, endocrinology, infectious disease, psychiatry, surgery, pediatrics, ophthalmology, nephrology)
-- **15 annotated Q&A pairs** with relevance judgments
-- Source: publicly available clinical guidelines and disease summaries
+- **46 documents** (41 medical + 5 legal), 30+ medical specialties
+- **108 annotated QA pairs** with document-level relevance labels
+- 11 documents manually curated from clinical guidelines; 30 LLM-generated with manual review
+- Statistical power: Wilcoxon signed-rank test, p < 0.001
 - License: CC BY 4.0
 
 ---
@@ -76,47 +91,10 @@ cd medical-rag-bench
 python evaluate.py
 ```
 
-Requires the RAG-Studio backend on the same machine:
+Single-command reproduction of all experiments. Requires the RAG-Studio backend:
 ```bash
 git clone https://github.com/Qi-hub-dot/RAG-Studio.git
 ```
-
-Output:
-```
-Medical-RAG-Bench: 中文医学文献 RAG 评测
-============================================================
-[1/4] 导入 11 篇医学文献...
-[2/4] 构建检索索引...
-[3/4] 运行检索实验...
-[4/4] 消融实验：chunk_size 对检索精度的影响...
-
-============================================================
-实验结果汇总
-============================================================
-  bm25      : P@3=42.22%  P@5=26.67%  MRR=1.000
-  semantic  : P@3=22.22%  P@5=20.00%  MRR=0.622
-  hybrid    : P@3=37.78%  P@5=25.33%  MRR=0.856
-```
-
----
-
-## Methodological Honesty
-
-We identified a limitation in our evaluation: **keyword-based relevance matching inflates P@K scores** through cross-topic false positives. For example, "再灌注" appears in both cardiology and neurology documents, causing a stroke document to be counted as "relevant" to a heart attack query.
-
-This means:
-- P@5 scores are **inflated** across all methods
-- The true performance gap between BM25 and semantic search is likely **larger** than reported
-- MRR is unaffected (ranks the first truly relevant result)
-- Future work should use document-level relevance labels and nDCG
-
----
-
-## Implications for RAG System Design
-
-1. **For specialized technical domains**: BM25 should be the primary retriever. Semantic search may be weighted down (0.2 or lower) or disabled.
-2. **Embedding model selection is critical**: A general-domain model can actively harm retrieval quality. Domain-specific embeddings are not optional — they are essential.
-3. **Evaluate before hybridizing**: The default "BM25 + semantic + RRF" pipeline should be validated per-domain, not assumed optimal.
 
 ---
 
@@ -124,17 +102,17 @@ This means:
 
 ```
 medical-rag-bench/
-├── README.md           # Project overview
-├── paper.md            # Full short paper (4-page academic format)
-├── dataset.py          # 11 medical documents + 15 Q&A pairs
+├── README.md           # You are here
+├── paper.md            # Full paper (8 sections, academic format)
+├── dataset.py          # 46 documents + 108 QA pairs
 ├── evaluate.py         # Reproducible evaluation pipeline
-├── results.json        # Quantitative results (auto-generated)
+├── results.json        # Quantitative results
 └── PORTFOLIO.md        # Technical portfolio for graduate applications
 ```
 
 ## Paper
 
-Read the full short paper: [paper.md](paper.md)
+Full paper with methods, 2x2 crossover analysis, and adaptive RRF: [paper.md](paper.md)
 
 ## License
 

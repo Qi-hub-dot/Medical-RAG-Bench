@@ -1,25 +1,26 @@
 # Engineering Portfolio — Medical-RAG-Bench
 
-> **First Systematic RAG Retrieval Benchmark for Chinese Medical Literature**
-> BM25 vs. Semantic Search · 11 Documents · 15 Q&A Pairs · Reproducible Evaluation
+> **The Embedding Language Gap in Non-English RAG: A Controlled Crossover Study**
+> 46 Documents · 108 QA Pairs · 2x2 Crossover · Wilcoxon p<0.001 · Cross-Domain Replication
 
 ---
 
 ## About This Portfolio
 
-This document presents Medical-RAG-Bench as evidence of **research methodology, domain-aware system evaluation, and critical thinking** in AI system design. Prepared in support of applications to taught postgraduate programs in Artificial Intelligence and Computer Science.
+This document presents Medical-RAG-Bench as evidence of **systematic experimental design, root cause analysis, and scientific communication** in AI system evaluation. Prepared for taught postgraduate applications in Artificial Intelligence and Computer Science.
 
 ---
 
 ## 1. Project Summary
 
-Medical-RAG-Bench is a systematic evaluation of retrieval methods for Chinese medical literature in RAG systems. It challenges the prevailing assumption that hybrid retrieval (BM25 + semantic search) is universally optimal, demonstrating that **BM25 alone significantly outperforms semantic search** in specialized technical domains with standardized terminology.
+Medical-RAG-Bench is a systematic investigation into why semantic search fails on non-English technical text in RAG systems. The project evolved through six experimental iterations, each driven by the findings of the previous:
 
-The project encompasses:
-- A curated dataset of 11 Chinese medical literature excerpts across 10 specialties
-- 15 annotated question-answer pairs with relevance judgments
-- A reproducible evaluation pipeline comparing BM25, semantic (FAISS), and hybrid (RRF) retrieval
-- A short academic paper documenting findings, analysis, and limitations
+1. **Initial finding**: BM25 significantly outperforms semantic search on Chinese medical literature (P@3 gap: 31.75pp)
+2. **Hypothesis formation**: Is the gap caused by domain (medical terminology) or language (English-trained embeddings on Chinese text)?
+3. **Controlled experiment**: 2x2 crossover (language x embedding) definitively isolates language mismatch as the root cause
+4. **Solution validation**: Switching to a Chinese embedding model (BGE) closes the gap and makes hybrid retrieval the clear winner
+5. **Cross-domain replication**: Legal literature confirms the language-mismatch hypothesis
+6. **Engineering contribution**: Adaptive RRF weighting as a safeguard against embedding failure
 
 ---
 
@@ -27,87 +28,100 @@ The project encompasses:
 
 | Responsibility | My Work |
 |---------------|---------|
-| **Research Design** | Formulated the core research question: "Does hybrid retrieval universally outperform BM25 in specialized technical domains?" Designed the experimental protocol with 3 retrieval conditions and 3 metrics. |
-| **Dataset Curation** | Selected 11 representative medical literature excerpts spanning 10 clinical specialties. Authored 15 domain-appropriate Q&A pairs with keyword relevance annotations. |
-| **Evaluation Engineering** | Built a reproducible evaluation pipeline (dataset.py + evaluate.py) that imports documents, builds BM25/FAISS indices, runs retrieval experiments, and generates structured results. |
-| **Critical Analysis** | Identified a methodological limitation (keyword-based matching causing cross-topic false positives) and quantified its impact on reported metrics. Proposed improvements (document-level labels, nDCG). |
-| **Academic Writing** | Authored paper.md — a 4-page short paper following academic conventions with abstract, introduction, methods, results, analysis, limitations, and references. |
+| **Research Design** | Formulated the research question, designed the 2x2 crossover protocol, chose metrics (P@K, MRR, Wilcoxon), designed the adaptive RRF method |
+| **Dataset Engineering** | Curated 46 documents across 30+ medical specialties; authored 108 QA pairs; designed the parallel Chinese-English crossover corpus; conducted a 20% spot-check for data quality |
+| **Experimental Execution** | Built a reproducible evaluation pipeline; ran 6 iterations of experiments with progressive refinement; integrated BGE embedding model; implemented adaptive RRF weighting |
+| **Root Cause Analysis** | Ruled out domain specialization via crossover experiment; identified language mismatch as the dominant factor; quantified the penalty (13-20pp) |
+| **Cross-Domain Validation** | Replicated the crossover experiment in the legal domain to test generalizability |
+| **Academic Writing** | Authored paper.md following academic conventions with abstract, methods, results, analysis, limitations, and references |
 
 ---
 
-## 3. The Core Finding
+## 3. The Scientific Narrative
 
-| Method | P@3 | P@5 | MRR |
-|--------|-----:|-----:|-----:|
-| **BM25** | **42.2%** | **26.7%** | **1.000** |
-| Semantic | 22.2% | 20.0% | 0.622 |
-| Hybrid (RRF) | 37.8% | 25.3% | 0.856 |
+### Phase 1: Observation
 
-BM25 outperforms semantic search by 20 percentage points in P@3 and achieves perfect MRR — the first retrieved result is always the correct document.
+BM25 (keyword search) dramatically outperforms semantic search on Chinese medical text — a 31.75pp gap in P@3. This contradicts the standard RAG design assumption that hybrid retrieval is universally optimal.
 
----
+### Phase 2: Hypothesis
 
-## 4. Root Cause Analysis
+Two competing explanations:
+- **Domain hypothesis**: Medical terminology is too specialized for general-domain embeddings
+- **Language hypothesis**: English-trained embeddings cannot represent Chinese text meaningfully
 
-Rather than simply reporting results, I investigated **why** BM25 dominates in this domain:
+### Phase 3: Controlled Experiment (2x2 Crossover)
 
-### 4.1 Low Semantic Variance
-Medical terminology has near-zero paraphrasing in Chinese clinical literature. "心肌梗死" is never colloquially expressed as "心脏病发作" — the technical register is strictly maintained. General-domain embeddings trained on web text gain no advantage from paraphrase handling when the domain has no paraphrases.
+Constructed parallel Chinese-English versions of the same medical documents (identical content, translated). Evaluated semantic retrieval across all four cells of the 2x2 matrix.
 
-### 4.2 Embedding Model Domain Gap
-all-MiniLM-L6-v2 (the standard lightweight embedding model used in most RAG tutorials) was trained on English web data. Its Chinese tokenization is suboptimal, and its semantic space lacks medical domain concepts. The performance gap would likely narrow — or reverse — with a domain-specific embedding model.
+**Result**: Language mismatch alone accounts for a 13-20pp penalty. The English embedding model performs best on English medical text (53.3%) — if domain were the issue, it would fail there too. The problem is definitively language, not domain.
 
-### 4.3 RRF Dilution
-Reciprocal Rank Fusion averages rank positions across retrievers. When one retriever (BM25) finds the correct document at rank 1-2 while the other (semantic) places it at rank 3-5, RRF produces a worse combined rank than BM25 alone. Fusion amplifies quality only when both sources are individually competent — a condition violated in this domain.
+### Phase 4: Solution
 
----
+Switched from all-MiniLM-L6-v2 (English) to bge-small-zh-v1.5 (Chinese). Semantic P@3 jumps from 18.55% to 48.41% (+29.86pp). Hybrid retrieval with the Chinese embedding achieves P@3=75.65% — now outperforming BM25 alone by 22pp.
 
-## 5. Methodological Honesty
+### Phase 5: Generalizability
 
-A distinguishing feature of this project is its **self-critical analysis** of evaluation methodology:
+Replicated the 2x2 crossover in the legal domain. Same pattern: language-matched embeddings outperform language-mismatched ones. The effect size varies by domain (20pp in medicine, 8pp in law) but the direction is consistent.
 
-**Problem identified**: Keyword-based relevance matching produces cross-topic false positives. For "急性心肌梗死的首选再灌注策略", the ischemic stroke document also mentions "再灌注" (in the context of thrombolysis, not PCI). It is counted as a P@5 "hit" despite being topically incorrect.
+### Phase 6: Engineering Safeguard
 
-**Impact on results**:
-- P@5 scores are inflated across all methods
-- The true performance gap between BM25 and semantic search is likely **larger** than reported
-- MRR is structurally unaffected (measures rank of the first truly relevant result)
-- Future work should use document-level relevance labels and report nDCG
-
-This self-critique demonstrates the ability to **evaluate one's own methodology**, a skill essential for graduate-level research and professional engineering.
+Proposed adaptive RRF weighting: auto-calibrate fusion weights based on per-retriever MRR on a small calibration set. Correctly downweights weak embeddings (0.28 weight for English model on Chinese text). For well-matched embeddings, equal-weight RRF is already near-optimal.
 
 ---
 
-## 6. Engineering Competencies
+## 4. Key Results
+
+### Main Experiment (n=108)
+
+| Method | English Embedding | Chinese Embedding (BGE) |
+|--------|:---:|:---:|
+| BM25 P@3 | 51.6% | 51.6% |
+| Semantic P@3 | 18.6% | 48.4% (+29.9pp) |
+| **Hybrid P@3** | 33.0% | **75.7%** (+42.7pp) |
+
+### 2x2 Crossover
+
+| | Chinese Text | English Text |
+|---|---|---|
+| English Embedding | 33.3% | 53.3% |
+| Chinese Embedding | 46.7% | 33.3% |
+
+**Language mismatch penalty: 13-20pp.** Domain is not the cause.
+
+---
+
+## 5. Engineering Competencies
 
 | Competency | Evidence |
 |------------|----------|
-| **Experimental Design** | 3-condition comparison (BM25 / Semantic / Hybrid), 3-metric evaluation (P@3, P@5, MRR), chunk-size ablation (256/512/1024) |
-| **Domain Analysis** | Identified structural properties of medical Chinese that explain BM25's advantage: low semantic variance, standardized terminology, domain-specific vocabulary |
-| **Reproducible Research** | Single-command evaluation (`python evaluate.py`); auto-generated results.json; all data in version-controlled dataset.py |
-| **Critical Thinking** | Self-identified keyword-matching limitation; quantified impact on metrics; proposed methodological improvements |
-| **Academic Communication** | Wrote paper.md following academic paper conventions (Abstract, Methods, Results, Discussion, References) |
-| **Full-Stack Integration** | Evaluation pipeline reuses RAG-Studio's BM25/FAISS/RRF implementation — demonstrating code reuse across projects |
+| **Experimental Design** | 2x2 crossover controlling for language vs. domain; multi-metric evaluation (P@K, MRR, Wilcoxon) |
+| **Root Cause Analysis** | Systematically ruled out competing hypotheses; isolated language mismatch as the dominant factor |
+| **Statistical Rigor** | Wilcoxon signed-rank test (p<0.001) on n=108; proper effect size quantification |
+| **Reproducible Research** | Single-command evaluation; version-controlled dataset; auto-generated results.json |
+| **Cross-Domain Thinking** | Replicated findings in legal domain; identified generalizable principle (language > domain) |
+| **Methodological Honesty** | Self-identified keyword-matching limitation; quantified impact; proposed document-level annotation |
+| **Scientific Communication** | 8-section academic paper with proper structure, citations, and self-critical analysis |
+| **Iterative Refinement** | 6 experimental iterations driven by findings, not predetermined plan |
 
 ---
 
-## 7. Relevance to AI/CS Graduate Study
+## 6. Relevance to AI/CS Graduate Study
 
-This project demonstrates several competencies directly relevant to MSc-level coursework and projects:
+This project demonstrates:
 
-- **Evaluating AI systems**: Not just building models, but rigorously measuring their performance under controlled conditions
-- **Domain adaptation awareness**: Understanding that general solutions (hybrid RAG) may fail in specialized contexts (medical Chinese)
-- **Research methodology**: Hypothesis formulation → experimental design → data collection → analysis → limitation acknowledgment
-- **Technical writing**: Producing a structured academic paper with proper citations and self-critical analysis
+- **Systems thinking**: Understanding that RAG performance depends on the entire pipeline, not individual components in isolation
+- **Experimental methodology**: Designing controlled experiments to isolate causal factors — a core skill in AI research and engineering
+- **Critical evaluation**: Not accepting default assumptions ("hybrid is always better"), but testing them in specific contexts
+- **Communication**: Producing a structured academic paper that clearly presents findings, methods, and limitations
+- **Practical impact**: The findings have direct implications for anyone building non-English RAG systems
 
 ---
 
-## 8. Repository
+## 7. Repository
 
 - **GitHub**: [github.com/Qi-hub-dot/Medical-RAG-Bench](https://github.com/Qi-hub-dot/Medical-RAG-Bench)
 - **Paper**: [paper.md](paper.md)
-- **Dataset**: [dataset.py](dataset.py) (CC BY 4.0)
-- **Results**: [results.json](results.json)
+- **Dataset**: [dataset.py](dataset.py) (CC BY 4.0, 46 docs, 108 QA pairs)
 
 ---
 
