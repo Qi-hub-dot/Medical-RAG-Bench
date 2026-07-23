@@ -1,2 +1,21 @@
 __pycache__/
 *.pyc
+
+# LaTeX
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# Python
+__pycache__/
+
+# Plots
+crossover_heatmap.png
+crossover_heatmap.pdf
+
