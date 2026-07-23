@@ -12,6 +12,7 @@
   <img src="https://img.shields.io/badge/embedding-BGE--small--zh-red" alt="BGE">
   <img src="https://img.shields.io/badge/hybrid-P@3=75.65%25-purple" alt="Hybrid">
   <img src="https://img.shields.io/badge/license-CC_BY_4.0-lightgrey" alt="License">
+  <a href="https://doi.org/10.5281/zenodo.21509728"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.21509728.svg" alt="DOI"></a>
 </p>
 
 ---
