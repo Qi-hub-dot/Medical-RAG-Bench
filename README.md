@@ -102,17 +102,21 @@ git clone https://github.com/Qi-hub-dot/RAG-Studio.git
 
 ```
 medical-rag-bench/
-├── README.md           # You are here
-├── paper.md            # Full paper (8 sections, academic format)
-├── dataset.py          # 46 documents + 108 QA pairs
-├── evaluate.py         # Reproducible evaluation pipeline
-├── results.json        # Quantitative results
-└── PORTFOLIO.md        # Technical portfolio for graduate applications
+├── README.md              # Project overview & quick start
+├── paper.md               # Full paper (anonymous, submission-ready)
+├── paper.tex              # LaTeX version (ACL template applied)
+├── references.bib         # BibTeX references
+├── dataset.py             # 46 documents + 108 QA pairs
+├── evaluate.py            # Reproducible evaluation pipeline
+├── plot_crossover.py      # 2x2 crossover heatmap generator
+├── results.json           # Quantitative results
+├── PORTFOLIO.md           # Technical portfolio for grad applications
+└── acl-template/          # Official ACL style files
 ```
 
 ## Paper
 
-Full paper with methods, 2x2 crossover analysis, and adaptive RRF: [paper.md](paper.md)
+Full paper with methods, 2x2 crossover analysis, and adaptive RRF: [paper.md](paper.md) | [paper.tex](paper.tex)
 
 ## License
 

@@ -1,7 +1,7 @@
 # When BM25 Beats Embeddings: A Case Study of Chinese Medical Literature Retrieval
 
-**Authors**: [Your Name]
-**Affiliation**: Independent Researcher
+**Authors**: Anonymous
+**Affiliation**: Anonymous Institution
 **Date**: July 2026
 
 ---
@@ -16,7 +16,7 @@ Our core finding is that **the language of the embedding model—not the retriev
 
 ## 1. Introduction
 
-Retrieval-Augmented Generation (RAG) has become the standard architecture for knowledge-intensive NLP tasks (Lewis et al., 2020). The retrieval component is typically implemented as a hybrid of BM25 (sparse, keyword-based) and dense vector search (semantic, embedding-based), fused via Reciprocal Rank Fusion (RRF; Cormack et al., 2009). The prevailing assumption is that semantic search captures paraphrases and conceptual similarity that BM25 misses.
+Retrieval-Augmented Generation (RAG) has become the standard architecture for knowledge-intensive NLP tasks (Lewis et al., 2020). The retrieval component is typically implemented as a hybrid of BM25 (sparse, keyword-based) and dense vector search (semantic, embedding-based), fused via Reciprocal Rank Fusion (RRF; Cormack et al., 2009). The prevailing assumption holds that semantic search captures paraphrases and conceptual similarity that BM25 misses.
 
 However, this assumption has been primarily validated on English general-domain benchmarks (MS MARCO, Natural Questions). **Nearly all widely-used embedding models are English-centric**, and their performance on non-English text—particularly specialized technical domains—remains systematically underexamined.
 
